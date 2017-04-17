@@ -16,10 +16,17 @@ module OosMechanizer
       end
     end
 
-    def each_result(first_name: nil, last_name: nil, sid: nil, &block)
+    def each_result(**kwargs, &block)
+      return to_enum(:each_result, **kwargs) unless block_given?
+
+      first_name = kwargs.fetch(:first_name, nil)
+      middle_name = kwargs.fetch(:middle_name, nil)
+      last_name = kwargs.fetch(:last_name, nil)
+
       results_page = @search_page.form_with(id: 'mainBodyForm') do |f|
-        f['mainBodyForm:FirstName'] = "#{first_name}*"
-        f['mainBodyForm:LastName'] = "#{last_name}*"
+        f['mainBodyForm:FirstName'] = "#{first_name}*" if first_name
+        f['mainBodyForm:MiddleName'] = "#{middle_name}*" if middle_name
+        f['mainBodyForm:LastName'] = "#{last_name}*" if last_name
       end.click_button
 
       if results_page.css('.infoMessage').text =~ /Too many/
