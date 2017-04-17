@@ -33,7 +33,7 @@ module OosMechanizer
       if results_page.css('.infoMessage').text =~ /Too many/
         raise TooManyResultsError
       elsif results_page.css('.infoMessage').text =~ /No matching/
-        yield nil
+        # do nothing
       elsif results_page.css('#offensesForm')
         # if there is one result, click back to the table view
         back_button = results_page.forms.first.button_with(value: 'Back')
