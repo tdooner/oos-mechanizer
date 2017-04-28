@@ -8,13 +8,19 @@ module OosMechanizer
     class TooManyResultsError < OosMechanizer::Error; end
     class NoPaginationError < OosMechanizer::Error; end
     class ResponseCodeError < OosMechanizer::Error; end
+    class ConnectionFailed < OosMechanizer::Error; end
 
     def initialize
-      @mech = Mechanize.new
+      @mech = Mechanize.new do |agent|
+        agent.open_timeout = 5
+        agent.read_timeout = 5
+      end
 
       @mech.get('http://docpub.state.or.us/OOS/intro.jsf') do |page|
         @search_page = @mech.click 'I Agree'
       end
+    rescue Net::HTTP::Persistent::Error
+      raise ConnectionFailed.new('Error connecting to OOS')
     end
 
     def each_result(**kwargs, &block)
@@ -45,6 +51,8 @@ module OosMechanizer
       end
     rescue Mechanize::ResponseCodeError
       raise OosMechanizer::Searcher::ResponseCodeError
+    rescue Net::HTTP::Persistent::Error
+      raise ConnectionFailed.new('Error connecting to OOS')
     end
 
     def offender_details(sid)
