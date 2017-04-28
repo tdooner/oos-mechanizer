@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'oos_mechanizer'
-  s.version     = '0.1.0'
+  s.version     = '0.1.1'
   s.licenses    = ['MIT']
   s.summary     = 'An interface to help navigate the Oregon Offender Search page'
   s.authors     = ['Tom Dooner']
