@@ -32,7 +32,7 @@ module OosMechanizer
         f['mainBodyForm:LastName'] = "#{last_name}*" if last_name
       end.click_button
 
-      if (error_message = results_page.css('.errorMessage').text.strip) && error_message.length
+      if (error_message = results_page.css('.errorMessage').text.strip) && error_message.length > 0
         raise SearchResultError.new("OOS returned error: #{error_message}")
       elsif results_page.css('.infoMessage').text =~ /Too many/
         raise TooManyResultsError
