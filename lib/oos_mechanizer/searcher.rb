@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module OosMechanizer
   class Searcher
     class TooManyResultsError < OosMechanizer::Error; end
@@ -16,20 +18,20 @@ module OosMechanizer
         @search_page = @mech.click 'I Agree'
       end
     rescue Net::HTTP::Persistent::Error
-      raise ConnectionFailed.new('Error connecting to OOS')
+      raise ConnectionFailed, 'Error connecting to OOS'
     end
 
     def each_result(**kwargs, &block)
       return to_enum(:each_result, **kwargs) unless block_given?
 
-      first_name = kwargs.fetch(:first_name, nil)
-      middle_name = kwargs.fetch(:middle_name, nil)
-      last_name = kwargs.fetch(:last_name, nil)
+      first_name = format_for_search(kwargs.fetch(:first_name, nil))
+      middle_name = format_for_search(kwargs.fetch(:middle_name, nil))
+      last_name = format_for_search(kwargs.fetch(:last_name, nil))
 
       results_page = @search_page.form_with(id: 'mainBodyForm') do |f|
-        f['mainBodyForm:FirstName'] = "#{first_name}*" if first_name
-        f['mainBodyForm:MiddleName'] = "#{middle_name}*" if middle_name
-        f['mainBodyForm:LastName'] = "#{last_name}*" if last_name
+        f['mainBodyForm:FirstName'] = first_name if first_name
+        f['mainBodyForm:MiddleName'] = middle_name if middle_name
+        f['mainBodyForm:LastName'] = last_name if last_name
       end.click_button
 
       if (error_message = results_page.css('.errorMessage').text.strip) && error_message.length > 0
@@ -62,6 +64,16 @@ module OosMechanizer
     end
 
     private
+
+    # The OOS search behaivor changes when a dash is in the name -- the asterisk
+    # operator becomes "exactly one character" instead of "zero or one
+    # character". Searching for "foo-bar*" will not match "foo-bar".
+    def format_for_search(name)
+      return unless name
+      return name if name.include?('-')
+
+      "#{name}*"
+    end
 
     def process_results(results_page)
       pagination = results_page.xpath('//*[@id="mainBodyForm:pageMsg"]').text().match(/Page (\d)\/(\d)/)
